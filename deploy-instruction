@@ -1,0 +1,60 @@
+#Fresh Cent 7.5 Minimal install, Running on DellR610 w/ 2x Xeon 5650X(Nehalem), FreeNAS for storage, pfSense for DNS
+
+#SETUP STORAGE
+#Ovirt Engine needs NFS/iscsi share of 80G minimum, we will use NFS here. Create a dataset and set nobody:nobody permissions, wrx+ for User and Group. 
+#Then in the share tab, under Advanced, set MapAll User and MapAll Group to nobody:nobody
+#Ensure the shares are on correct binding networks with correct permissions From a linux host, run to confirm that your NFS server is ready.  
+#This is version3 over TCP 
+rpcinfo -t remote_nfs_server_ip nfs 3
+
+#SETUP DNS
+# Free nas has host and domain overrides in the DNS Resolver service. A record entry supposedly creates PTR records, 
+# but to be safe I added reverse dns entries as A records, example: 
+#  Host     1
+#  Domain   1.168.192.in-addr.arpa  
+#  Address  192.168.1.1
+#  pfSense does this IPV6 DHCP nonsense now that fucks my /etc/hosts up, so I'm not DHCP'ing this at all
+
+
+#CENTOS 7 Install
+# Set your network up during install as static ip with hostname and dns set
+# You have to customize the partitions, the defaults will not work
+# Partition your drive and ensure the /var partition is added and has 65 GiB.  Utilize the remaining space accordingly, 
+# I keep /home to 20 GiB, boot at 1GiB, swap at ~25% of your host total RAM, and the remainder to the / dir. 
+# My 140GB Virtual Disk seems to be the smallest disk I can get by with safely here 
+
+#Set SELinux to permissive
+sed -i 's/=enforcing/=permissive/g' /etc/sysconfig/selinux
+sed -i 's/=enforcing/=permissive/g' /etc/selinux/config
+setenforce 0
+
+#Enable Nested VM features. Look thru /sys/module/kvm_intel/parameters/ and enable as needed. Google for AMD chips.
+echo "options kvm-intel nested=1" >> /etc/modprobe.d/kvm-nested
+echo "options kvm-intel enable_shadow_vmcs=1" >> /etc/modprobe.d/kvm-nested
+echo "options kvm-intel enable_apicv=1" >> /etc/modprobe.d/kvm-nested
+modprobe -r kvm_intel;
+modprobe -a kvm_intel;
+
+#Kill NetworkManager, it created the base configs for your ISCSI interfaces (if any), and it will only cause problems later
+systemctl stop NetworkManager
+systemctl disable NetworkManager
+
+#Install rpm, update, install needed packages, and reboot.
+yum install http://resources.ovirt.org/pub/yum-repo/ovirt-release42.rpm -y; yum update -y; 
+yum install ovirt-hosted-engine-setup -y; yum install ovirt-engine-appliance -y; reboot
+
+#Double check your /etc/resolv.conf, sometimes IPV6.  On that, in my network configs, I remove all *IPV6* entries.
+#You can add the FQDN for Host and Engine in /etc/hosts, but I found this step unneccesary
+#Double check now with nslookup <engine-fqdn> <host-fqdn> to make sure it resolves (FQDN to IP), 
+#also ensure PTR record exists for reverse DNS lookup (IP to FQDN)
+
+#Install hosted-engine
+screen -S deploy
+hosted-engine --deploy
+#In the answers, I choose not to add entry to /etc/hosts for Engine VM as I've seen silly entries go in there.  Your (optional) static entries and 
+#properly configured DNS resolver will take care of this anyway
+#Most everything default is acceptable save for you nfs and other specified answers.
+
+#TO ADD - Fucking Multipath iSCSI on ovirt is a bitch, need to figure it out and update here
+
+
