@@ -29,9 +29,9 @@ sed -i 's/=enforcing/=permissive/g' /etc/selinux/config
 setenforce 0
 
 #Enable Nested VM features. Look thru /sys/module/kvm_intel/parameters/ and enable as needed. Google for AMD chips.
-echo "options kvm-intel nested=1" >> /etc/modprobe.d/kvm-nested
-echo "options kvm-intel enable_shadow_vmcs=1" >> /etc/modprobe.d/kvm-nested
-echo "options kvm-intel enable_apicv=1" >> /etc/modprobe.d/kvm-nested
+echo "options kvm_intel nested=1" >> /etc/modprobe.d/kvm-nested
+echo "options kvm_intel enable_shadow_vmcs=1" >> /etc/modprobe.d/kvm-nested
+echo "options kvm_intel enable_apicv=1" >> /etc/modprobe.d/kvm-nested
 modprobe -r kvm_intel;
 modprobe -a kvm_intel;
 
