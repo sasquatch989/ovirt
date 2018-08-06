@@ -3,7 +3,7 @@
 #SETUP STORAGE
 #Ovirt Engine needs NFS/iscsi share of 80G minimum, we will use NFS here. Create a dataset and set nobody:nobody permissions, wrx+ for User and Group. 
 #Then in the share tab, under Advanced, set MapAll User and MapAll Group to nobody:nobody
-#Ensure the shares are on correct binding networks with correct permissions From a linux host, run to confirm that your NFS server is ready.  
+#Ensure the shares are on correct binding networks with correct permissions From a linux host or the Engine Host after initial install, run to confirm that your NFS server is ready.  
 #This is version3 over TCP 
 rpcinfo -t remote_nfs_server_ip nfs 3
 
@@ -46,7 +46,7 @@ yum install ovirt-hosted-engine-setup -y; yum install ovirt-engine-appliance -y;
 #Double check your /etc/resolv.conf, sometimes lookups only try IPV6.  On that, in my network configs, I remove all *IPV6* entries.
 #You can add the FQDN for Host and Engine in /etc/hosts, but I found this step unneccesary
 #Double check now with nslookup on <engine-fqdn> and <host-fqdn> to make sure it resolves (FQDN to IP), 
-#also ensure PTR record exists for reverse DNS lookup (IP to FQDN)
+#also lookup IP's to ensure record exists for reverse DNS lookup (IP to FQDN)
 
 #Install hosted-engine
 screen -S deploy
@@ -78,6 +78,7 @@ multipath -ll
 #  `-+- policy='round-robin 0' prio=1 status=active
 #  |- 6:0:0:0 sde 8:64 active ready running
 #    `- 7:0:0:0 sdf 8:80 active ready running
+#Edit: The above changes are all I needed, I can see that writes to disks on the ISCSI Lun's are in fact multi pathing round robin.
 
 
 
