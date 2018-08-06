@@ -1,4 +1,4 @@
-#Fresh Cent 7.5 Minimal install, Running on DellR610 w/ 2x Xeon 5650X(Nehalem), FreeNAS for storage, pfSense for DNS
+#Fresh Cent 7.5 Minimal install, Running on DellR610 w/ 2x Xeon 5650X(Westmere), FreeNAS for storage, pfSense for DNS
 
 #SETUP STORAGE
 #Ovirt Engine needs NFS/iscsi share of 80G minimum, we will use NFS here. Create a dataset and set nobody:nobody permissions, wrx+ for User and Group. 
